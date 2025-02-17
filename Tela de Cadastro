@@ -1,0 +1,52 @@
+import 'package:flutter/material.dart';
+import 'planet.dart';
+import 'planet_database.dart';
+
+class EditPlanetScreen extends StatefulWidget {
+  final Planet? planet;
+
+  EditPlanetScreen({this.planet});
+
+  @override
+  _EditPlanetScreenState createState() => _EditPlanetScreenState();
+}
+
+class _EditPlanetScreenState extends State<EditPlanetScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _distanceFromSunController = TextEditingController();
+  final _sizeController = TextEditingController();
+  final _nicknameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.planet != null) {
+      _nameController.text = widget.planet!.name;
+      _distanceFromSunController.text = widget.planet!.distanceFromSun.toString();
+      _sizeController.text = widget.planet!.size.toString();
+      _nicknameController.text = widget.planet!.nickname ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _distanceFromSunController.dispose();
+    _sizeController.dispose();
+    _nicknameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.planet == null ? 'Adicionar Planeta' : 'Editar Planeta'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: 
