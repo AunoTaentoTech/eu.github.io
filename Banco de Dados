@@ -1,0 +1,97 @@
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'planet.dart';
+
+class PlanetDatabase {
+  static final PlanetDatabase instance = PlanetDatabase._init();
+
+  static Database? _database;
+
+  PlanetDatabase._init();
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB('planets.db');
+    return _database!;
+  }
+
+  Future<Database> _initDB(String filePath) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
+  }
+
+  Future _createDB(Database db, int version) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+    const doubleType = 'REAL NOT NULL';
+    const nullableTextType = 'TEXT';
+
+    await db.execute('''
+CREATE TABLE planets (
+  id $idType,
+  name $textType,
+  distanceFromSun $doubleType,
+  size $doubleType,
+  nickname $nullableTextType
+)
+''');
+  }
+
+  Future<Planet> create(Planet planet) async {
+    final db = await instance.database;
+    final id = await db.insert('planets', planet.toMap());
+    return planet.copy(id: id);
+  }
+
+  Future<Planet?> readPlanet(int id) async {
+    final db = await instance.database;
+
+    final maps = await db.query(
+      'planets',
+      columns: ['id', 'name', 'distanceFromSun', 'size', 'nickname'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return Planet.fromMap(maps.first);
+    } else {
+      return null;
+    }
+  }
+
+  Future<List<Planet>> readAll() async {
+    final db = await instance.database;
+
+    final result = await db.query('planets');
+
+    return result.map((json) => Planet.fromMap(json)).toList();
+  }
+
+  Future<int> update(Planet planet) async {
+    final db = await instance.database;
+
+    return db.update(
+      'planets',
+      planet.toMap(),
+      where: 'id = ?',
+      whereArgs: [planet.id],
+    );
+  }
+
+  Future<int> delete(int id) async {
+    final db = await instance.database;
+
+    return await db.delete(
+      'planets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+}
